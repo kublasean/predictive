@@ -1,7 +1,100 @@
-function sleep (time) {
-    return new Promise((resolve) => setTimeout(resolve, time));
+/* GLOBALS */
+var MODELS;
+
+//on load it! button press
+function loadit() {
+    var fname = "None";
+    document.getElementById("sampleit").hidden = true;
+    $('#fileSelect  > option:selected').each(function() {
+        fname = $(this).val();
+    });
+    if (fname != "None") {
+        $.ajax({
+            url:"./"+fname,
+            success:setmodels
+        });
+    }
+    else {
+        setmodels(document.getElementById("input").value);
+    }
+    console.log(fname);
 }
 
+//on sample it! button press
+function sampleit() {
+    outarray = getoutput();
+    document.getElementById("output").innerText = emitoutput(outarray);
+}
+
+//set the MODELS glob based
+//off text from input
+function setmodels(input) {
+    var newlines = document.getElementById("newlines").checked;
+    var order = document.getElementById("order").value;
+    var words = [];
+
+    //clean it
+    if (newlines == true) {
+        input = input.replace(/ +/, " ");
+        var tmp = input.split(/(\W)/);
+        for (var i=0; i<tmp.length; i++) {
+            if (tmp[i] != null && tmp[i] != " " && tmp[i].length > 0) {
+                words.push(tmp[i]);
+            }
+        }
+    }
+    else {
+        var tmp = input.split(/\s|(\W)/);
+        for (var i=0; i<tmp.length; i++) {
+            if (tmp[i] != null && tmp[i].length > 0) {
+                words.push(tmp[i]);
+            }
+        }
+    }
+
+    //create the models
+    var models = [];
+    models.push(markov(0, words).get(""));
+    for (var i=1; i<=order; i++) {
+        models.push(markov(i, words));
+    }
+    MODELS = models;
+    document.getElementById("sampleit").hidden = false;
+}
+
+//generate text from the models
+function getoutput() {
+    var models = MODELS;
+    var next = "";
+    var order = document.getElementById("order").value;
+    var history = [document.getElementById("firstword").value];
+    var outarray = [history[0]];
+    for (var i=0; i<200; i++) {
+        var key = history.join('');
+        for (var j=order; j>=0; j--) {
+            if (j == 0) {
+                next = sample(models[j]);
+                console.log(key);
+                console.log(models[j]);
+                break;
+            }
+            if (models[j].has(key)) {
+                console.log(key);
+                console.log(models[j].get(key));
+                next = sample(models[j].get(key));
+                break;
+            }
+        }
+        if (history.length >= order) {
+            history.shift();
+        }
+        history.push(next);
+        outarray.push(next);
+    }
+    return outarray;
+}
+
+//create the model of an order
 function markov(order, text) {
     var model = new Map();
     for (var i=0; i<text.length-order; i++) {
@@ -37,6 +130,7 @@ function markov(order, text) {
     return model;
 }
 
+//sample a model
 function sample(m) {
     var s = Math.random();
     var prev = 0;
@@ -53,20 +147,17 @@ function sample(m) {
     return null;
 }
 
+//create a somewhat formatted text block
+//from array of words / puncuation
 function emitoutput(words) {
     var output = "";
     var punc = /\W/;
     for (var i=0; i<words.length-1; i++) {
         //this word is apostrophe
-        //no space if next is 's'
         if (words[i] == "'") {
             output += words[i];
-            if (words[i+1] != "s") {
-                output += " ";
-            }
         }
         //this word is newline
-        //<br>
         else if (words[i] == "\n") {
             output += "\n";
         }
@@ -87,63 +178,4 @@ function emitoutput(words) {
         }
     }
     return output;
-}
-
-function textgen() {
-    var input = document.getElementById("input").value;
-    var output = document.getElementById("output");
-    var newlines = document.getElementById("newlines").checked;
-    var order = document.getElementById("order").value;
-    var words = [];
-
-    //split the text by whitespace and punctuation
-    if (newlines == true) {
-        input = input.replace(/ +/, " ");
-        var tmp = input.split(/(\W)/);
-        for (var i=0; i<tmp.length; i++) {
-            if (tmp[i] != null && tmp[i] != " " && tmp[i].length > 0) {
-                words.push(tmp[i]);
-            }
-        }
-    }
-    else {
-        var tmp = input.split(/\s|(\W)/);
-        for (var i=0; i<tmp.length; i++) {
-            if (tmp[i] != null && tmp[i].length > 0) {
-                words.push(tmp[i]);
-            }
-        }
-    }
-
-    console.log(order);
-    var models = [];
-    models.push(markov(0, words).get(""));
-    for (var i=1; i<=order; i++) {
-        models.push(markov(i, words));
-    }
-    console.log(models);
-
-    var history = [""];
-    var outarray = [];
-    for (var i=0; i<300; i++) {
-        var key = history.join('');
-        var next = "";
-        for (var j=order; j>=0; j--) {
-            if (j == 0) {
-                next = sample(models[j]);
-                break;
-            }
-            if (models[j].has(key)) {
-                next = sample(models[j].get(key));
-                break;
-            }
-        }
-        history.shift();
-        history.push(next);
-        outarray.push(next);
-    }
-
-    output.innerText = emitoutput(outarray);
-    
-    return;
 }
