@@ -9,24 +9,27 @@
                 margin: 0;
                 padding: 0;
             }
+            button {
+                width: 100px;
+                height: 50px;
+            }
             textarea {
                 border: 1px solid black;
                 width: 100%;
-                height: 60%;
+                height: 500px;
+                margin-top: 13px;
             }
             #body-container {
                 background-color: grey;
                 border: 1px solid black;
                 margin: auto;
-                width: 95%;
+                max-width: 1300px;
             }
             #input-area {
                 text-align: center;
-                height: 500px;
             }
             #output-area {
                 text-align: center;
-                height: 500px;
             } 
             #order {
                 width: 40px;
@@ -44,13 +47,11 @@
         <h1 class="w3-center">Markov Chain Text Generator</h1>
         <div class="w3-row" id="body-container">
             <div class="w3-container w3-half w3-blue" id="input-area">
-                paste your text
                 <textarea id="input"></textarea>
-                <input id="firstword" type="text">first word?</input>
-                <input type="checkbox" id="newlines">include newlines?</input>
-                <input type="number" id="order" value="2" min="0" max="10">order of chain?</input>
+                Options
             <div id="fileSelect-wrapper">
-    	    <span>Select file from this directory </span>
+            
+    	    <span>Use an example text file?</span>
             <select id="fileSelect">
             <option>None</option>
     	    <?php //----- php code to create html selection with local files
@@ -63,17 +64,22 @@
     	    ?>
     	    </select>
     	    <br />
-    	    <span>Or upload a local file here:</span>
+    	    <span>Upload a file?</span>
     	    <input type="file" id="files" name="files[]"/>
+            <br>
+            <input id="firstword" type="text">first word?</input>
+            <input type="checkbox" id="newlines">include newlines?</input>
+            <input type="number" id="order" value="2" min="0" max="10">order of chain?</input>
             </div>
             <button onclick="loadit()">load it!</button>
             </div>
             <div class="w3-container w3-half" id="output-area">
-                <div style="text-align: left; height: 400px; background-color: white;">                
+                <div style="text-align: left; height: 500px; background-color: white;">                
                 <p id="output"></p>
                 </div>
                 <button id="sampleit" onclick="sampleit()">sample it!</button>
             </div>
+            
         </div>
 	    <script>
         document.getElementById("sampleit").hidden = true;
