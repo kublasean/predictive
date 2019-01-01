@@ -1,5 +1,10 @@
 /* GLOBALS */
 var MODELS;
+var WORDINDEX;
+var EMIT_INTERVAL;
+var HIST_ARRAY;
+var ORDER;
+var PREVIOUS_TEXT;
 
 //on load it! button press
 function loadit() {
@@ -17,13 +22,17 @@ function loadit() {
     else {
         setmodels(document.getElementById("input").value);
     }
-    console.log(fname);
 }
 
 //on sample it! button press
 function sampleit() {
-    outarray = getoutput();
-    document.getElementById("output").innerText = emitoutput(outarray);
+    WORDINDEX = 0;
+    HIST_ARRAY = [document.getElementById("firstword").value];
+    ORDER = document.getElementById("order").value;
+    document.getElementById("output").innerText = "";
+    PREVIOUS_TEXT = "";
+    EMIT_INTERVAL = setInterval(emitoutput, 50);
+    //document.getElementById("output").innerText = emitoutput(outarray);
 }
 
 //set the MODELS glob based
@@ -74,13 +83,9 @@ function getoutput() {
         for (var j=order; j>=0; j--) {
             if (j == 0) {
                 next = sample(models[j]);
-                console.log(key);
-                console.log(models[j]);
                 break;
             }
             if (models[j].has(key)) {
-                console.log(key);
-                console.log(models[j].get(key));
                 next = sample(models[j].get(key));
                 break;
             }
@@ -93,6 +98,27 @@ function getoutput() {
     }
     return outarray;
 }
+
+//just get one word instead of all at once
+function getword() {
+    var key = HIST_ARRAY.join('');
+    var next = "";
+    for (var j=ORDER; j>=0; j--) {
+        if (j == 0) {
+            next = sample(MODELS[j]);
+            break;
+        }
+        if (MODELS[j].has(key)) {
+            next = sample(MODELS[j].get(key));
+            break;
+        }
+    }
+    return next;
+}
+
+    
+    
+    
 
 //create the model of an order
 function markov(order, text) {
@@ -149,33 +175,65 @@ function sample(m) {
 
 //create a somewhat formatted text block
 //from array of words / puncuation
-function emitoutput(words) {
+/*function emitoutput() {
     var output = "";
     var punc = /\W/;
-    for (var i=0; i<words.length-1; i++) {
-        //this word is apostrophe
-        if (words[i] == "'") {
-            output += words[i];
+    var word = "";
+    var i = WORDINDEX;
+    
+    console.log(i);
+    console.log(words.length);
+    
+    if (i >= words.length) {
+        clearInterval(EMIT_INTERVAL);
+    }
+    
+    //this word is apostrophe
+    if (words[i] == "'") {
+        word += words[i];
+    }
+    //this word is newline
+    else if (words[i] == "\n") {
+        word += "\n";
+    }
+    //this word is puncuation 
+    //space after
+    else if (punc.test(words[i])) { 
+        word += words[i] + " ";
+    }
+    //this word is a word
+    //space if no punc after it
+    else {
+        if (punc.test(words[i+1])) {
+            word += words[i];
         }
-        //this word is newline
-        else if (words[i] == "\n") {
-            output += "\n";
-        }
-        //this word is puncuation 
-        //space after
-        else if (punc.test(words[i])) { 
-            output += words[i] + " ";
-        }
-        //this word is a word
-        //space if no punc after it
         else {
-            if (punc.test(words[i+1])) {
-                output += words[i];
-            }
-            else {
-                output += words[i] + " ";
-            }
+            word += words[i] + " ";
         }
     }
-    return output;
+    //document.getElementById("output").innerText += word;
+    WORDINDEX += 1;
+}*/
+
+function emitoutput() {
+    if (WORDINDEX > 1000) {
+        clearInterval(EMIT_INTERVAL);
+    }
+    var word = getword();
+    
+    if (WORDINDEX % 5 == 0) {
+        if (HIST_ARRAY.length >= ORDER) {
+            HIST_ARRAY.shift();
+        }
+        HIST_ARRAY.push(word);
+        document.getElementById("output").innerText = PREVIOUS_TEXT + " " + word;
+        PREVIOUS_TEXT = document.getElementById("output").innerText;
+    }
+    else {
+        document.getElementById("output").innerText = PREVIOUS_TEXT + " " + word;
+    }
+    
+    WORDINDEX += 1;
+
 }
+
